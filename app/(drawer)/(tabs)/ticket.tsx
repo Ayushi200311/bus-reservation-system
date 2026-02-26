@@ -251,17 +251,21 @@ import {
   View
 } from 'react-native';
 
-// --- TYPES ---
+// --- TYPES FOR UI ---
 interface Ticket {
-  booking_id: number;
-  source: string; // from_city from DB
-  destination: string; // to_city from DB
-  travel_date: string; // Formatted date
+  id: string;
+  source: string;
+  destination: string;
+  date: string;
+  time: string;
+  arrivalTime: string;
   busName: string;
-  seat_no: string;
+  busType: string;
+  seatNo: string;
   pnr: string;
-  status: 'Confirmed' | 'Pending' | 'Cancelled';
-  amount: number;
+  status: string;
+  totalAmount: number;
+  rawDate?: string; // "27 Feb 2026" – used to decide Upcoming vs Completed
 }
 
 export default function BookingsScreen() {
@@ -286,20 +290,21 @@ export default function BookingsScreen() {
       const data = await response.json();
 
       if (Array.isArray(data)) {
-        // Map DB fields to UI fields if needed
-        const formattedData = data.map((item: any) => ({
+        // Map DB fields to UI fields
+        const formattedData: Ticket[] = data.map((item: any) => ({
           id: item.booking_id.toString(),
           source: item.from_city,
           destination: item.to_city,
-          date: item.travel_date, // e.g. "12 Feb 2026, 10:30 PM"
-          time: item.travel_date.split(',')[1], // Extract Time
+          date: item.travel_date, // "12 Feb 2026, 10:30 PM"
+          time: (item.dep_time || (item.travel_date?.split(',')[1] || '')).trim(),
           arrivalTime: item.arr_time,
           busName: item.bus_name,
           busType: item.bus_type || 'AC Sleeper',
           seatNo: item.seat_no,
           pnr: item.pnr,
           status: item.status,
-          totalAmount: item.amount
+          totalAmount: item.amount,
+          rawDate: item.date_only, // "12 Feb 2026"
         }));
         setTickets(formattedData);
       }
@@ -316,11 +321,24 @@ export default function BookingsScreen() {
     fetchBookings();
   }, []);
 
-  // Filter Logic (Simple date check or status check)
-  // For now, we show all Confirmed in "Upcoming" and others in "Completed"
-  const currentData = activeTab === 'upcoming' 
-    ? tickets.filter(t => t.status === 'Confirmed') 
-    : tickets.filter(t => t.status !== 'Confirmed');
+  // Decide Upcoming vs Completed based on journey date + status
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isUpcoming = (t: Ticket) => {
+    if (t.rawDate) {
+      const d = new Date(t.rawDate);
+      if (!isNaN(d.getTime())) {
+        d.setHours(0, 0, 0, 0);
+        return d >= today && t.status === 'Confirmed';
+      }
+    }
+    return t.status === 'Confirmed';
+  };
+
+  const currentData = activeTab === 'upcoming'
+    ? tickets.filter(isUpcoming)
+    : tickets.filter(t => !isUpcoming(t));
 
   const renderTicket = ({ item }: { item: any }) => (
     <View style={styles.card}>
