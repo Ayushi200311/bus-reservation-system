@@ -1284,37 +1284,35 @@ export default function SeatSelectionScreen() {
             <Text style={styles.selectedText}>{selectedSeats.length} Seat(s)</Text>
             <Text style={styles.totalPrice}>₹{totalPrice.toFixed(2)}</Text>
           </View>
-          <TouchableOpacity 
-  style={styles.proceedBtn} 
-  onPress={() => {
-  // 1. Log what we have for debugging
-  console.log("DEBUG: seatData[0] is", seatData[0]);
-  console.log("DEBUG: params.busId is", params.busId);
+          <TouchableOpacity
+            style={styles.proceedBtn}
+            onPress={() => {
+              const rawScheduleId = params.scheduleId;
+              const scheduleId = Array.isArray(rawScheduleId)
+                ? rawScheduleId[0]
+                : rawScheduleId;
 
-  // 2. Try every possible source for the ID
-  const finalBusId = seatData[0]?.bus_id || params.busId || params.bus_id;
+              if (!scheduleId) {
+                Alert.alert(
+                  'System Error',
+                  'Missing trip information. Please go back and select the bus again.',
+                );
+                return;
+              }
 
-  if (!finalBusId || finalBusId === "undefined") {
-    Alert.alert(
-      "System Error", 
-      `Missing Bus ID. \nData ID: ${seatData[0]?.bus_id} \nParam ID: ${params.busId}`
-    );
-    return;
-  }
-
-  router.push({
-    pathname: '/boarding',
-    params: { 
-      ...params, 
-      selectedSeats: selectedSeats.join(','), 
-      totalPrice: totalPrice.toString(),
-      busId: finalBusId.toString() 
-    }
-  });
-}}
-  >
-  <Text style={styles.btnText}>Proceed</Text>
-</TouchableOpacity>
+              router.push({
+                pathname: '/boarding',
+                params: {
+                  ...params,
+                  selectedSeats: selectedSeats.join(','),
+                  totalPrice: totalPrice.toString(),
+                  scheduleId: scheduleId.toString(),
+                },
+              });
+            }}
+          >
+            <Text style={styles.btnText}>Proceed</Text>
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
