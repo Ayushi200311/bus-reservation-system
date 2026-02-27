@@ -122,12 +122,13 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!phone || phone.length < 10) {
-      alert("Please enter a valid phone number");
+      alert('Please enter a valid phone number');
       return;
     }
 
     setLoading(true);
     try {
+      // Change IP/host here to your backend if needed
       const response = await fetch('http://172.24.149.252:3000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -137,22 +138,22 @@ export default function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        await AsyncStorage.setItem('userPhone', phone); 
-        alert("Your Login OTP is: " + data.otp);
+        await AsyncStorage.setItem('userPhone', phone);
+        alert('Your Login OTP is: ' + data.otp);
         router.push({
           pathname: '/otp',
-          params: { correctOtp: data.otp, phone: phone } 
+          params: { correctOtp: data.otp, phone },
         });
       } else {
-        alert(data.message); 
+        alert(data.message);
       }
     } catch (error) {
-      alert("Connection Error");
+      alert('Connection Error');
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back</Text>
@@ -191,6 +192,15 @@ export default function Login() {
             <Text style={styles.link}>Sign Up</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={styles.adminLink}
+          onPress={() => router.push('/admin-login')}
+        >
+          <Text style={styles.adminText}>
+            Are you an admin? <Text style={styles.adminHighlight}>Login to console</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -213,9 +223,9 @@ const styles = StyleSheet.create({
   },
   icon: { marginRight: 10 },
   input: { flex: 1, color: COLORS.text, fontSize: 16 },
-  button: { 
-    backgroundColor: COLORS.primary, 
-    paddingVertical: 16, 
+  button: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 16,
     borderRadius: SIZES.radius || 12,
     elevation: 3,
     shadowColor: COLORS.primary,
@@ -227,7 +237,11 @@ const styles = StyleSheet.create({
   footerContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 30 },
   footer: { color: COLORS.muted },
   link: { color: COLORS.primary, fontWeight: '700' },
+  adminLink: { marginTop: 16, alignItems: 'center' },
+  adminText: { color: COLORS.muted, fontSize: 14 },
+  adminHighlight: { color: COLORS.primary, fontWeight: '700' },
 });
+
 
 
 // // import AsyncStorage from '@react-native-async-storage/async-storage';

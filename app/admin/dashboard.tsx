@@ -435,14 +435,6 @@ export default function AdminDashboard() {
         {/* 3. MENU GRID (Mapped to Your DB Tables) */}
         <View style={styles.gridContainer}>
           
-          {/* Linked to: SCHEDULES Table */}
-          {/* <DashboardTile 
-            icon="calendar" 
-            title="Trip Schedules" 
-            subtitle="Plan & Assign Trips" 
-            route="/admin/add-schedule" 
-            color="#FF1E1E" // Red
-          /> */}
           <DashboardTile 
             icon="calendar" 
             title="Trip Schedules" 
@@ -451,7 +443,6 @@ export default function AdminDashboard() {
             color="#FF1E1E" 
           />
 
-          {/* Linked to: BOOKINGS & PASSENGERS Tables */}
           <DashboardTile 
             icon="ticket" 
             title="Bookings" 
@@ -460,7 +451,6 @@ export default function AdminDashboard() {
             color="#2196F3" // Blue
           />
 
-          {/* Linked to: BUSES Table */}
           <DashboardTile 
             icon="bus" 
             title="Fleet Manager" 
@@ -469,7 +459,6 @@ export default function AdminDashboard() {
             color="#FFD700" // Gold
           />
 
-          {/* Linked to: ROUTES, CITIES, BUSSTOPS Tables */}
           <DashboardTile 
             icon="map" 
             title="Route Master" 
@@ -478,7 +467,24 @@ export default function AdminDashboard() {
             color="#4dffb8" // Green
           />
 
-          {/* Linked to: PAYMENTS Table */}
+          {/* Linked to: CITIES Table */}
+          <DashboardTile 
+            icon="location" 
+            title="Cities" 
+            subtitle="Origin & Destination" 
+            route="/admin/manage-cities" 
+            color="#03A9F4" 
+          />
+
+          {/* Linked to: BUSSTOPS Table */}
+          <DashboardTile 
+            icon="pin" 
+            title="Bus Stops" 
+            subtitle="Boarding & Dropping" 
+            route="/admin/manage-busstops" 
+            color="#8BC34A" 
+          />
+
           <DashboardTile 
             icon="wallet" 
             title="Transactions" 
@@ -487,7 +493,6 @@ export default function AdminDashboard() {
             color="#9C27B0" // Purple
           />
 
-          {/* Linked to: NOTIFICATIONS Table */}
           <DashboardTile 
             icon="megaphone" 
             title="Broadcast" 
@@ -496,7 +501,6 @@ export default function AdminDashboard() {
             color="#FF5722" // Orange
           />
 
-          {/* Linked to: USERS Table */}
           <DashboardTile 
             icon="people" 
             title="Customers" 
@@ -505,12 +509,11 @@ export default function AdminDashboard() {
             color="#00BCD4" // Cyan
           />
 
-          {/* Linked to: ADMINS Table */}
           <DashboardTile 
             icon="shield-checkmark" 
             title="Admin Access" 
             subtitle="Manage Staff" 
-            route="/admin/settings" 
+            route="/admin/manage-admins" 
             color="#607D8B" // Grey
           />
 
