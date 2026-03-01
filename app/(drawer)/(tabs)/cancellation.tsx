@@ -60,7 +60,20 @@ export default function CancellationScreen() {
             status: b.status,
             amount: b.amount,
           }));
-        setTickets(mapped);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcomingOnly = mapped.filter((t) => {
+          const d = new Date(t.date);
+          if (!isNaN(d.getTime())) {
+            d.setHours(0, 0, 0, 0);
+            return d >= today;
+          }
+          // If parsing fails, keep it cancellable by default
+          return true;
+        });
+
+        setTickets(upcomingOnly);
       }
     } catch (e) {
       console.error('Cancellation fetch error', e);
@@ -149,6 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    paddingTop: 28,
     borderBottomWidth: 1,
     borderColor: '#222',
   },

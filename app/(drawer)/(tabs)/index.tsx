@@ -526,7 +526,6 @@ import React, { useEffect, useState } from 'react';
 import {
     Alert,
     FlatList,
-    Image,
     Modal,
     ScrollView,
     StyleSheet,
@@ -556,10 +555,12 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectingFor, setSelectingFor] = useState('from');
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCities();
     loadRecentSearches();
+    loadUserName();
   }, []);
 
   // --- Logic Functions ---
@@ -640,6 +641,20 @@ export default function Home() {
     });
   };
 
+  const loadUserName = async () => {
+    try {
+      const phone = await AsyncStorage.getItem('userPhone');
+      if (!phone) return;
+      const res = await fetch(`http://172.24.149.252:3000/profile?phone=${phone}`);
+      const data = await res.json();
+      if (data && data.name) {
+        setUserName(data.name);
+      }
+    } catch (e) {
+      console.error('Home user load error', e);
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -650,10 +665,11 @@ export default function Home() {
             <View style={styles.menuCircle}><Icon name="menu" size={24} color={COLORS.text} /></View>
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
-            <Text style={styles.welcomeText}>Hello, Traveler!</Text>
+            <Text style={styles.welcomeText}>
+              {userName ? `Hello, ${userName}` : 'Hello, Traveler!'}
+            </Text>
             <Text style={styles.subWelcome}>Where to today?</Text>
           </View>
-          <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
         </View>
 
         {/* Search Card */}

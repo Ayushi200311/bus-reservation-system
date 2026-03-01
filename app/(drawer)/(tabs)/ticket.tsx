@@ -462,7 +462,7 @@ export default function BookingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  header: { padding: 16, borderBottomWidth: 1, borderColor: '#222', alignItems: 'center' },
+  header: { padding: 16, paddingTop: 28, borderBottomWidth: 1, borderColor: '#222', alignItems: 'center' },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   tabContainer: { flexDirection: 'row', backgroundColor: '#111', margin: 16, borderRadius: 8, padding: 4 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6 },

@@ -91,11 +91,11 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* --- TAB 2: MY TRIPS --- */}
+      {/* --- TAB 2: MY TICKETS (Bookings) --- */}
       <Tabs.Screen
-        name="bookings"
+        name="ticket"
         options={{
-          title: 'My Trips',
+          title: 'My Bookings',
           tabBarLabel: 'Tickets',
           tabBarIcon: ({ color }) => (
             <Ionicons name="ticket" size={24} color={color} />
@@ -103,14 +103,14 @@ export default function TabsLayout() {
         }}
       />
 
-      {/* --- TAB 3: NOTIFICATIONS --- */}
+      {/* --- TAB 3: CANCELLATIONS --- */}
       <Tabs.Screen
-        name="notifications"
+        name="cancellation"
         options={{
-          title: 'Updates',
-          tabBarLabel: 'Updates',
+          title: 'Cancellations',
+          tabBarLabel: 'Cancellation',
           tabBarIcon: ({ color }) => (
-            <Ionicons name="notifications" size={24} color={color} />
+            <Ionicons name="close-circle" size={24} color={color} />
           ),
         }}
       />
@@ -124,6 +124,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="seat-selection" options={{ href: null }} />
       <Tabs.Screen name="passenger-details" options={{ href: null }} />
       <Tabs.Screen name="payment" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
       
     </Tabs>
   );

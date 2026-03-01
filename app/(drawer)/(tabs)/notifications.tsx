@@ -274,7 +274,14 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderColor: '#222' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    paddingTop: 28,
+    borderBottomWidth: 1,
+    borderColor: '#222',
+  },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginLeft: 16 },
   
   list: { padding: 16 },
