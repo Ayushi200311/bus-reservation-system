@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../../constants/theme';
 import {
   ActivityIndicator,
   Alert,
@@ -13,27 +14,38 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 
 type BusStop = {
   stop_id: number;
-  city_name?: string;
-  stop_name: string;
-  landmark?: string | null;
+  bus_id: number;
+  type: string;
+  location: string;
+  time?: string;
+  bus_number?: string;
+};
+
+type Bus = {
+  bus_id: number;
+  bus_number: string;
 };
 
 export default function ManageBusStops() {
   const router = useRouter();
   const [stops, setStops] = useState<BusStop[]>([]);
+  const [buses, setBuses] = useState<Bus[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [cityName, setCityName] = useState('');
-  const [stopName, setStopName] = useState('');
-  const [landmark, setLandmark] = useState('');
+  const [editingStop, setEditingStop] = useState<BusStop | null>(null);
+  const [busId, setBusId] = useState<string>('');
+  const [type, setType] = useState<'Boarding' | 'Dropping'>('Boarding');
+  const [location, setLocation] = useState('');
+  const [time, setTime] = useState('00:00');
 
   const fetchStops = async () => {
     try {
-      const res = await fetch('http://192.168.76.252:3000/admin/busstops');
+      const res = await fetch(`${API_BASE_URL}/admin/busstops`);
       const data = await res.json();
       setStops(data);
     } catch (e) {
@@ -44,41 +56,95 @@ export default function ManageBusStops() {
     }
   };
 
+  const fetchBuses = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/buses`);
+      const data = await res.json();
+      setBuses(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     fetchStops();
+    fetchBuses();
   }, []);
 
-  const handleAddStop = async () => {
-    if (!stopName.trim()) {
-      Alert.alert('Validation', 'Stop name is required');
+  const busItems = buses.map((b) => ({ label: b.bus_number, value: String(b.bus_id) }));
+
+  const handleSave = async () => {
+    if (!location.trim()) {
+      Alert.alert('Validation', 'Location is required');
+      return;
+    }
+    if (!busId) {
+      Alert.alert('Validation', 'Please select a bus');
       return;
     }
 
     try {
-      const res = await fetch('http://192.168.76.252:3000/admin/add-busstop', {
-        method: 'POST',
+      const body = { bus_id: parseInt(busId), type, location: location.trim(), time };
+      const url = editingStop ? `${API_BASE_URL}/admin/update-busstop/${editingStop.stop_id}` : `${API_BASE_URL}/admin/add-busstop`;
+      const method = editingStop ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          city_name: cityName,
-          stop_name: stopName,
-          landmark,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        Alert.alert('Error', err.error || 'Failed to add bus stop');
+        Alert.alert('Error', err.error || 'Failed to save');
         return;
       }
 
       setModalVisible(false);
-      setCityName('');
-      setStopName('');
-      setLandmark('');
+      setEditingStop(null);
+      setBusId('');
+      setLocation('');
+      setTime('00:00');
       fetchStops();
     } catch (e) {
       Alert.alert('Error', 'Network error');
     }
+  };
+
+  const openEdit = (item: BusStop) => {
+    setEditingStop(item);
+    setBusId(String(item.bus_id));
+    setType(item.type as 'Boarding' | 'Dropping');
+    setLocation(item.location);
+    setTime(item.time || '00:00');
+    setModalVisible(true);
+  };
+
+  const handleDelete = (item: BusStop) => {
+    Alert.alert('Delete Stop', `Remove stop at "${item.location}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/admin/delete-busstop/${item.stop_id}`, { method: 'DELETE' });
+            if (res.ok) fetchStops();
+            else Alert.alert('Error', 'Could not delete');
+          } catch (e) {
+            Alert.alert('Error', 'Network error');
+          }
+        },
+      },
+    ]);
+  };
+
+  const openAdd = () => {
+    setEditingStop(null);
+    setBusId('');
+    setType('Boarding');
+    setLocation('');
+    setTime('00:00');
+    setModalVisible(true);
   };
 
   const renderItem = ({ item }: { item: BusStop }) => (
@@ -87,10 +153,15 @@ export default function ManageBusStops() {
         <Ionicons name="bus-outline" size={20} color="#fff" />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.stopName}>{item.stop_name}</Text>
-        {!!item.city_name && <Text style={styles.cityName}>{item.city_name}</Text>}
-        {!!item.landmark && <Text style={styles.landmark}>{item.landmark}</Text>}
+        <Text style={styles.stopName}>{item.location}</Text>
+        <Text style={styles.meta}>{item.type} • Bus #{item.bus_number || item.bus_id} • {item.time || '--:--'}</Text>
       </View>
+      <TouchableOpacity onPress={() => openEdit(item)} style={styles.iconBtn}>
+        <Ionicons name="create-outline" size={22} color="#4dffb8" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => handleDelete(item)} style={styles.iconBtn}>
+        <Ionicons name="trash-outline" size={22} color="#FF1E1E" />
+      </TouchableOpacity>
     </View>
   );
 
@@ -100,8 +171,8 @@ export default function ManageBusStops() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Manage Bus Stops</Text>
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
+        <Text style={styles.headerTitle}>Bus Stops</Text>
+        <TouchableOpacity onPress={openAdd}>
           <Ionicons name="add-circle" size={30} color="#4dffb8" />
         </TouchableOpacity>
       </View>
@@ -120,47 +191,63 @@ export default function ManageBusStops() {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Bus Stop</Text>
+            <Text style={styles.modalTitle}>{editingStop ? 'Edit Bus Stop' : 'Add Bus Stop'}</Text>
 
-            <Text style={styles.label}>City Name</Text>
+            <Text style={styles.label}>Bus</Text>
+            <View style={styles.pickerWrap}>
+              <RNPickerSelect
+                value={busId}
+                onValueChange={setBusId}
+                items={busItems}
+                placeholder={{ label: 'Select bus...', value: null }}
+                style={pickerStyles}
+                useNativeAndroidPickerStyle={false}
+              />
+            </View>
+
+            <Text style={styles.label}>Type</Text>
+            <View style={styles.typeRow}>
+              <TouchableOpacity
+                style={[styles.typeBtn, type === 'Boarding' && styles.typeBtnActive]}
+                onPress={() => setType('Boarding')}
+              >
+                <Text style={[styles.typeBtnText, type === 'Boarding' && { color: '#fff' }]}>Boarding</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.typeBtn, type === 'Dropping' && styles.typeBtnActive]}
+                onPress={() => setType('Dropping')}
+              >
+                <Text style={[styles.typeBtnText, type === 'Dropping' && { color: '#fff' }]}>Dropping</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Location / Stop Name</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. Ahmedabad"
+              placeholder="e.g. Nehrunagar Bus Stand"
               placeholderTextColor="#666"
-              value={cityName}
-              onChangeText={setCityName}
+              value={location}
+              onChangeText={setLocation}
             />
 
-            <Text style={styles.label}>Stop Name</Text>
+            <Text style={styles.label}>Time (HH:MM)</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. Nehrunagar Bus Stop"
+              placeholder="e.g. 08:30"
               placeholderTextColor="#666"
-              value={stopName}
-              onChangeText={setStopName}
-            />
-
-            <Text style={styles.label}>Landmark (optional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Near XYZ Mall"
-              placeholderTextColor="#666"
-              value={landmark}
-              onChangeText={setLandmark}
+              value={time}
+              onChangeText={setTime}
             />
 
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.modalBtn, { backgroundColor: '#333' }]}
-                onPress={() => setModalVisible(false)}
+                onPress={() => { setModalVisible(false); setEditingStop(null); }}
               >
                 <Text style={styles.modalBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, { backgroundColor: '#FF1E1E' }]}
-                onPress={handleAddStop}
-              >
-                <Text style={styles.modalBtnText}>Save</Text>
+              <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#FF1E1E' }]} onPress={handleSave}>
+                <Text style={styles.modalBtnText}>{editingStop ? 'Update' : 'Save'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -169,6 +256,11 @@ export default function ManageBusStops() {
     </SafeAreaView>
   );
 }
+
+const pickerStyles = StyleSheet.create({
+  inputIOS: { fontSize: 16, padding: 14, color: '#fff' },
+  inputAndroid: { fontSize: 16, padding: 14, color: '#fff' },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -201,8 +293,8 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   stopName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  cityName: { color: '#4dffb8', fontSize: 12, marginTop: 2 },
-  landmark: { color: '#888', fontSize: 12, marginTop: 2 },
+  meta: { color: '#888', fontSize: 12, marginTop: 2 },
+  iconBtn: { padding: 8 },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -230,6 +322,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333',
   },
+  pickerWrap: {
+    backgroundColor: '#000',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  typeRow: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  typeBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+    alignItems: 'center',
+  },
+  typeBtnActive: { backgroundColor: '#FF1E1E', borderColor: '#FF1E1E' },
+  typeBtnText: { color: '#888' },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -244,4 +353,3 @@ const styles = StyleSheet.create({
   },
   modalBtnText: { color: '#fff', fontWeight: 'bold' },
 });
-

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../../constants/theme';
 import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function SendNotification() {
@@ -9,8 +10,12 @@ export default function SendNotification() {
   const [message, setMessage] = useState('');
 
   const handleSend = async () => {
+    if (!title.trim() || !message.trim()) {
+      Alert.alert("Validation", "Title and message required");
+      return;
+    }
     try {
-      const response = await fetch('http://192.168.76.252:3000/admin/broadcast', {
+      const response = await fetch(`${API_BASE_URL}/admin/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, message })
@@ -30,9 +35,9 @@ export default function SendNotification() {
       <View style={{ padding: 20 }}>
         <Text style={styles.label}>Notification Title</Text>
         <TextInput style={styles.input} placeholder="e.g. 50% OFF Sale!" placeholderTextColor="#666" value={title} onChangeText={setTitle} />
-        
+
         <Text style={styles.label}>Message</Text>
-        <TextInput style={[styles.input, {height: 100}]} multiline placeholder="Enter details..." placeholderTextColor="#666" value={message} onChangeText={setMessage} />
+        <TextInput style={[styles.input, { height: 100 }]} multiline placeholder="Enter details..." placeholderTextColor="#666" value={message} onChangeText={setMessage} />
 
         <TouchableOpacity style={styles.btn} onPress={handleSend}>
           <Text style={styles.btnText}>Send to All Users</Text>

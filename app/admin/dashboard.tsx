@@ -345,15 +345,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Image,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 export default function AdminDashboard() {
@@ -455,15 +455,15 @@ export default function AdminDashboard() {
             icon="bus" 
             title="Fleet Manager" 
             subtitle="Add/Edit Buses" 
-            route="/admin/add-bus" 
+            route="/admin/manage-buses" 
             color="#FFD700" // Gold
           />
 
           <DashboardTile 
             icon="map" 
             title="Route Master" 
-            subtitle="Cities & Stops" 
-            route="/admin/add-route" 
+            subtitle="Routes & Cities" 
+            route="/admin/manage-routes" 
             color="#4dffb8" // Green
           />
 

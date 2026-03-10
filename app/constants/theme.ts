@@ -15,3 +15,5 @@ export const SIZES = {
   title: 26,
   text: 16,
 };
+
+export const API_BASE_URL = 'http://10.81.83.252:3000';

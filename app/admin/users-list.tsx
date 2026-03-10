@@ -1,18 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { API_BASE_URL } from '../../constants/theme';
 import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function UsersList() {
   const router = useRouter();
   const [users, setUsers] = useState([]);
 
-  useEffect(() => {
-    fetch('http://192.168.76.252:3000/admin/users')
-      .then(res => res.json())
-      .then(data => setUsers(data))
-      .catch(e => console.error(e));
+  const fetchUsers = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/users`);
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+    }
   }, []);
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,9 +34,9 @@ export default function UsersList() {
           <View style={styles.card}>
             <View style={styles.iconBox}><Ionicons name="person" size={20} color="#fff" /></View>
             <View>
-                <Text style={styles.name}>{item.name || 'Unknown'}</Text>
-                <Text style={styles.sub}>{item.phone}</Text>
-                <Text style={styles.sub}>{item.email}</Text>
+              <Text style={styles.name}>{item.name || 'Unknown'}</Text>
+              <Text style={styles.sub}>{item.phone}</Text>
+              <Text style={styles.sub}>{item.email}</Text>
             </View>
           </View>
         )}

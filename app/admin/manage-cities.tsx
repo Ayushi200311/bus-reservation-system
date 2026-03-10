@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../../constants/theme';
 import {
   ActivityIndicator,
   Alert,
@@ -15,9 +16,8 @@ import {
 } from 'react-native';
 
 type City = {
-  city_id: number;
+  id: number;
   name: string;
-  state?: string | null;
 };
 
 export default function ManageCities() {
@@ -27,11 +27,11 @@ export default function ManageCities() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
-  const [stateName, setStateName] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const fetchCities = async () => {
     try {
-      const res = await fetch('http://172.24.149.252:3000/admin/cities');
+      const res = await fetch(`${API_BASE_URL}/admin/cities`);
       const data = await res.json();
       setCities(data);
     } catch (e) {
@@ -46,32 +46,58 @@ export default function ManageCities() {
     fetchCities();
   }, []);
 
-  const handleAddCity = async () => {
+  const handleSaveCity = async () => {
     if (!name.trim()) {
       Alert.alert('Validation', 'City name is required');
       return;
     }
 
     try {
-      const res = await fetch('http://172.24.149.252:3000/admin/add-city', {
-        method: 'POST',
+      const url = editingId ? `${API_BASE_URL}/admin/update-city/${editingId}` : `${API_BASE_URL}/admin/add-city`;
+      const res = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, state: stateName }),
+        body: JSON.stringify({ name: name.trim() }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        Alert.alert('Error', err.error || 'Failed to add city');
+        Alert.alert('Error', err.error || (editingId ? 'Failed to update city' : 'Failed to add city'));
         return;
       }
 
       setModalVisible(false);
       setName('');
-      setStateName('');
+      setEditingId(null);
       fetchCities();
     } catch (e) {
       Alert.alert('Error', 'Network error');
     }
+  };
+
+  const openEdit = (item: City) => {
+    setEditingId(item.id);
+    setName(item.name);
+    setModalVisible(true);
+  };
+
+  const handleDelete = (item: City) => {
+    Alert.alert('Delete City', `Remove "${item.name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/admin/delete-city/${item.id}`, { method: 'DELETE' });
+            if (res.ok) fetchCities();
+            else Alert.alert('Error', 'Could not delete city');
+          } catch (e) {
+            Alert.alert('Error', 'Network error');
+          }
+        },
+      },
+    ]);
   };
 
   const renderItem = ({ item }: { item: City }) => (
@@ -81,8 +107,13 @@ export default function ManageCities() {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.cityName}>{item.name}</Text>
-        {!!item.state && <Text style={styles.cityState}>{item.state}</Text>}
       </View>
+      <TouchableOpacity onPress={() => openEdit(item)} style={styles.iconBtn}>
+        <Ionicons name="create-outline" size={22} color="#4dffb8" />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => handleDelete(item)} style={styles.iconBtn}>
+        <Ionicons name="trash-outline" size={22} color="#FF1E1E" />
+      </TouchableOpacity>
     </View>
   );
 
@@ -103,7 +134,7 @@ export default function ManageCities() {
       ) : (
         <FlatList
           data={cities}
-          keyExtractor={(item) => item.city_id.toString()}
+          keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ padding: 16 }}
           renderItem={renderItem}
         />
@@ -112,7 +143,7 @@ export default function ManageCities() {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add City</Text>
+            <Text style={styles.modalTitle}>{editingId ? 'Edit City' : 'Add City'}</Text>
 
             <Text style={styles.label}>City Name</Text>
             <TextInput
@@ -123,27 +154,18 @@ export default function ManageCities() {
               onChangeText={setName}
             />
 
-            <Text style={styles.label}>State (optional)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Gujarat"
-              placeholderTextColor="#666"
-              value={stateName}
-              onChangeText={setStateName}
-            />
-
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={[styles.modalBtn, { backgroundColor: '#333' }]}
-                onPress={() => setModalVisible(false)}
+                onPress={() => { setModalVisible(false); setEditingId(null); setName(''); }}
               >
                 <Text style={styles.modalBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, { backgroundColor: '#FF1E1E' }]}
-                onPress={handleAddCity}
+                onPress={handleSaveCity}
               >
-                <Text style={styles.modalBtnText}>Save</Text>
+                <Text style={styles.modalBtnText}>{editingId ? 'Update' : 'Save'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -184,7 +206,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   cityName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  cityState: { color: '#888', fontSize: 12, marginTop: 2 },
+  iconBtn: { padding: 8 },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
