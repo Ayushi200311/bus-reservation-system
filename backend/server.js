@@ -173,11 +173,19 @@ app.get('/my-bookings', (req, res) => {
 });
 
 app.post('/confirm-payment', (req, res) => {
-  const { pnr } = req.body;
+  const { pnr, amount, method } = req.body;
   if (!pnr) return res.status(400).json({ error: "PNR is missing" });
+  const payMethod = method || 'UPI';
+  const payAmount = parseFloat(amount) || 0;
   db.query("UPDATE Bookings SET status = 'Confirmed' WHERE pnr = ?", [pnr], (err) => {
     if (err) return res.status(500).json({ error: "Database Error" });
-    res.json({ message: "Payment Successful! Booking Confirmed.", pnr });
+    db.query("SELECT booking_id FROM bookings WHERE pnr = ?", [pnr], (err2, rows) => {
+      if (!err2 && rows && rows.length > 0) {
+        const bookingId = rows[0].booking_id;
+        db.query("INSERT INTO payments (booking_id, amount, method, status) VALUES (?, ?, ?, 'Success')", [bookingId, payAmount, payMethod], () => {});
+      }
+      res.json({ message: "Payment Successful! Booking Confirmed.", pnr });
+    });
   });
 });
 

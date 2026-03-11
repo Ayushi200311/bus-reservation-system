@@ -101,6 +101,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { API_BASE_URL } from '../../../constants/theme';
+import { useAlert } from '../../../hooks/useAlert';
 import {
   ActivityIndicator,
   FlatList,
@@ -113,6 +115,7 @@ import {
 
 export default function BoardingScreen() {
   const router = useRouter();
+  const { alert } = useAlert();
   const params = useLocalSearchParams();
   const { scheduleId, fromCity, toCity, travelDate } = params;
 
@@ -133,7 +136,7 @@ export default function BoardingScreen() {
   const fetchPoints = async () => {
     try {
       const response = await fetch(
-        `http://172.24.149.252:3000/get-bus-points?scheduleId=${scheduleId}`
+        `${API_BASE_URL}/get-bus-points?scheduleId=${scheduleId}`
       );
       const data = await response.json();
       setBoardingList(data.boarding || []);
@@ -164,7 +167,7 @@ export default function BoardingScreen() {
 
   const handleProceed = () => {
     if (!selectedBoarding || !selectedDropping) {
-      alert("Please select both Boarding and Dropping points");
+      alert({ title: 'Select Points', message: 'Please select both Boarding and Dropping points.', icon: 'warning' });
       return;
     }
 

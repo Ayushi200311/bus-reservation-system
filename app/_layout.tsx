@@ -25,12 +25,14 @@
 // }
 
 
+import { AlertProvider } from '../hooks/useAlert';
 import { Stack } from 'expo-router';
 
 export default function RootLayout() {
   const isLoggedIn = false; // Replace with your real Auth Logic later
 
   return (
+    <AlertProvider>
     <Stack screenOptions={{ headerShown: false }}>
       {isLoggedIn ? (
         // Go to the Drawer (which contains Tabs)
@@ -40,5 +42,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
       )}
     </Stack>
+    </AlertProvider>
   );
 }
