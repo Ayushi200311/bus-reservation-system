@@ -6,11 +6,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// const db = mysql.createPool({
+//   host: 'localhost',
+//   user: 'root',
+//   password: '',
+//   database: 'bus_app',
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0
+// });
+// --- CLOUD DATABASE CONNECTION ---
 const db = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'bus_app',
+  host: process.env.DB_HOST || 'mysql-bus-reservation-db-ajudiyaayushi1-9c88.a.aivencloud.com',
+  user: process.env.DB_USER || 'avnadmin',
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || 'defaultdb',
+  port: process.env.DB_PORT || 28874,
+  ssl: {
+    rejectUnauthorized: false
+  },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
