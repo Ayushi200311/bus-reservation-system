@@ -17,13 +17,13 @@ app.use(express.json());
 // });
 // --- CLOUD DATABASE CONNECTION ---
 const db = mysql.createPool({
-  host: process.env.DB_HOST || 'mysql-bus-reservation-db-ajudiyaayushi1-9c88.a.aivencloud.com',
-  user: process.env.DB_USER || 'avnadmin',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || 'defaultdb',
-  port: process.env.DB_PORT || 28874,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false // This handles the 'REQUIRED' SSL mode
   },
   waitForConnections: true,
   connectionLimit: 10,
@@ -33,7 +33,8 @@ const db = mysql.createPool({
 db.getConnection((err, connection) => {
   if (err) console.error('Error connecting to MySQL:', err);
   else {
-    console.log('Connected to MySQL Database (Pool)!');
+    // console.log('Connected to MySQL Database (Pool)!');
+    console.log('✅ SUCCESS! VS Code is now linked to Aiven Cloud.');
     connection.release();
   }
 });
